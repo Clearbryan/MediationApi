@@ -12,17 +12,22 @@ export class CreditorModel {
         const { Schema } = this.mongoose
         const creditorSchema = new Schema({
             name: { type: String, required: true },
+            description: { type: String },
             ncrNumber: { type: String },
             type: { type: String },
-            creditorNumber: { type: String },
-            contact: { 
-                email: { type: String },
-                phone: { type: String },
-                alternatePhone: { type: String }
+            active: { type: Boolean, default: true },
+            deductPDAFee: { type: Boolean, default: false },
+            status: { 
+                verified: { type: Boolean, default: false }
+             },
+            contact: {
+                phone: [ { type: { type: String }, number: { type: String } }],
+                email: [{ type: { type:  String }, address: { type: String } }]
             },
             banking: {
-                name: { type: String },
+                bankName: { type: String },
                 accountNumber: { type: String },
+                accountType: { type: String },
                 branchName: { type: String },
                 branchCode: { type: String }
             },
@@ -32,22 +37,13 @@ export class CreditorModel {
                 province: { type: String },
                 postalCode: { type: String },
                 country: { type: String }
+            },
+            submited: {
+                by: { type: String, date: String }
             }
         })
         const Creditor = this.mongoose.model('Creditor', creditorSchema)
         return Creditor
-
     }
 
-    // retrieve all creditors
-    async retrieveCreditors() {
-        const creditorModel = new CreditorModel(this.mongoose)
-        let creditor = creditorModel.mongoose.models.Creditor
-        try {
-            return await creditor.find()
-        } catch (error) {
-            console.log(error)
-            return error
-        }
-    }
 }
