@@ -2,6 +2,7 @@
  * Applicant routing logic
  */
 import mongoose from 'mongoose'
+import _ from 'lodash'
 import Validator from '../validators/validator_functions'
 import passport from 'passport'
 import { PaymentSetupValidator } from '../validators/payment_setup_validator'
@@ -13,6 +14,7 @@ import { PaymentSetup } from '../Payments/ApplicantPaymentSetup'
 import { companyAuth } from '../auth/company_auth'
 import { ApplicantModel } from '../models/ApplicantModel'
 import { Applicant } from '../Applicants/Aplicant'
+import { CreditorModel } from '../models/CreditorModel'
 import { Helper } from '../helpers/helper'
 
 const { isUser, isAdmin } = companyAuth
@@ -22,6 +24,7 @@ const setupValidator = new PaymentSetupValidator()
 const feeValidator = new FeeValidator()
 const applicantModel = new ApplicantModel(mongoose).mongoose.models.Applicant
 const budgetModel = new BudgetModel(mongoose).mongoose.models.Budget
+const creditorModel = new CreditorModel(mongoose).mongoose.models
 
 export class ApplicantRoutes {
     constructor(express) {
@@ -47,7 +50,7 @@ export class ApplicantRoutes {
                        res.status(200).json({success: true, message: 'Applicant successfully added'})
                    }else {
                        const errorMessage = helper.checkDuplicate(error)
-                       return res.status(500).json({success, errorMessage})
+                       return res.status(400).json({success, errorMessage})
                    }   
                }
             } catch (error) {
@@ -151,7 +154,7 @@ export class ApplicantRoutes {
                     }
                 }
             } catch (error) {
-                console.log(error);
+                return res.status(500).json({ success:false, errorMessage: error.message })
             }
         })
     }
@@ -195,6 +198,52 @@ export class ApplicantRoutes {
                 }
             } catch (error) {
                 return res.status(500).json({success: false, errorMessage: error.message})
+            }
+        })
+    }
+
+    // add creditors
+    addApplicantCreditor() {
+        return this.router.post('/creditors/add', passport.authenticate('jwt', {session: false}), isUser, async (req, res) => {
+            const {applicantId} = req.query
+            if(!applicantId) {
+                 return res.status(403).json({success: false, errorMessage: 'Forbidden'})
+            }else {
+                const isIdValid = mongoose.isValidObjectId(applicantId)
+                // if ivalid id
+                if(!isIdValid) {
+                    return res.status(403).json({success: false, errorMessage: 'Malinformed applicant Id'})
+                    // id is valid
+                }else {
+                    // simulate selecting creditor
+                try {
+                    const {applicantId} = req.query
+                    const isIdValid = mongoose.isValidObjectId(applicantId)
+                    // if ivalid id
+                    if(!isIdValid) {
+                        return res.status(403).json({success: false, errorMessage: 'Malinformed applicant Id'})
+                    // id is valid
+                    }else {
+                            const creditors = await creditorModel.Creditor.find()
+                            let applicantCreditorOptions = creditors.map((el) => {
+                                return _.pick(el, ['banking', 'name', 'status', 'ncrNumber', 'type'])
+                            })
+                            // add creditor details to applicant
+                            const applicant = await applicantModel.findByIdAndUpdate(applicantId)
+                            let prePopulate
+                            applicantCreditorOptions.forEach((el) => {
+                                prePopulate = _.pick(el, ['name', 'ncrNumber', 'status'])
+                                prePopulate['accountNumber'] = el.banking.accountNumber
+                                prePopulate['feedback'] = 'awaiting'
+                                applicant.creditors.push(prePopulate)
+                            })
+                            await applicant.save()
+                            res.status(200).json({success: true, message: 'Creditor assigned successfully'})
+                        }
+                    } catch (error) {
+                        return res.status(400).json({ success:false, errorMessage: error.message })
+                    }
+                }
             }
         })
     }

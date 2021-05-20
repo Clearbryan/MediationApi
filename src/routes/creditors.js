@@ -1,11 +1,15 @@
 /**
  * creditors routes
  */
+import mongoose from 'mongoose'
+import passport from 'passport'
 import { CreditorModel } from '../models/CreditorModel'
+import { companyAuth } from '../auth/company_auth'
 import { Creditor } from '../Creditors/Creditor'
 import { CreditorValidator } from '../validators/creditor_validation'
 import { Helper } from '../helpers/helper'
-import mongoose from 'mongoose'
+
+const { isUser, isAdmin } = companyAuth
 const helper = new Helper()
 
 export class CreditorRoutes {
@@ -15,7 +19,7 @@ export class CreditorRoutes {
 
     // add new creditor
     addCreditor() {
-        return this.router.post('/add', async (req, res, next) => {
+        return this.router.post('/add', passport.authenticate('jwt', {session: false}), isUser, async (req, res, next) => {
             try {
                 const validationResult = await new CreditorValidator().validateCreditorInput(req.body)
                 const { error, value } = validationResult
@@ -23,6 +27,7 @@ export class CreditorRoutes {
                     // return error message to client
                    return res.status(400).json({success: false, message: error.message})
                 }else {
+                    value['submited'] = { by: req.user._id, date: Date.now() }
                     const creditor = new Creditor(value)
                     const response = await creditor.create()
                     const { success, error } = response

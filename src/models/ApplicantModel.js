@@ -31,7 +31,19 @@ export class ApplicantModel {
             paymentSetup: { type: this.mongoose.Schema.Types.ObjectId, ref: 'PaymentSetup' },
             budget: { type: this.mongoose.Schema.Types.ObjectId, ref: 'Budget' },
             assignedTo: { type: this.mongoose.Schema.Types.ObjectId, ref: 'Company' }, 
-            creditors: [String],
+            creditors: [{
+                accountNumber: { type: String },
+                ncrNumber: { type: String },
+                name: { type: String },
+                feedback: { type: String, default: 'Awaiting' },
+                status: { type: String },
+                cob: { type: Number, default: 0 },
+                installment: { type: Number, default: 0 },
+                source: { type: String },
+                interest: { type: Number, default: 0 },
+                balance: { type: Number, default: 0 },
+                remainingTerm: { original: { type: Number, default: 0 }, revised: { type: Number, default: 0 } }
+            }],
             documents: {
                 uploads: [String],
                 proposals: [String],
