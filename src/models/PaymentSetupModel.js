@@ -8,10 +8,10 @@ export class PaymentSetupModel {
         const { Schema } = this.mongoose
         const paymentSetUpSchema = new Schema({
             frequency: { type: String },
-            commission: { type: Number },
-            commissionPercentage: { type: Number },
-            proposedEscallationValue: { type: Number },
-            proposedEscallationPercentage:{ type: Number },
+            commission: { type: Number, default: 0 },
+            commissionPercentage: { type: Number, default: 0 },
+            proposedEscallationValue: { type: Number, default: 0 },
+            proposedEscallationPercentage:{ type: Number, default: 0 },
             type: { type: String },
             firstPaymentDueDate: { type: String },
             firstPaymentDistributionDate: { type: String },
@@ -22,7 +22,7 @@ export class PaymentSetupModel {
                 branchCode: { type: String },
                 accountNumber: { type: String },
                 accountType: { type: String },
-                installment: { type: Number }
+                installment: { type: Number, default: 0 }
             }
         })
         const PaymentSetup = this.mongoose.model('PaymentSetup', paymentSetUpSchema)

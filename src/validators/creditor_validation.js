@@ -44,4 +44,20 @@ export class CreditorValidator {
         })
         return schema.validate(creditor)
     }
+
+    validateApplicantCreditorInput(data) {
+        const schema = Joi.object({
+            cob:Joi.number().required().max(100000000).error(new Error('Invalid cob amount')),
+            originalInstallment: Joi.number().max(100000000).error(new Error('Invalid original installment amount')),
+            originalInterest: Joi.number().max(100000000).error(new Error('Invalid interest rate')),
+            source: Joi.string().max(250).error(new Error('Invalid source input')),
+            feedback: Joi.string().max(250).error(new Error('Invalid feedback option')),
+            active: Joi.boolean().error(new Error('Invalid status option')),
+            accountOpened: Joi.date().required().error(new Error('Invalid account date')),
+            term: {
+                original: Joi.number().required().max(100000000).error(new Error('Invalid installment term')),
+            }
+        })
+        return schema.validate(data)
+    }
 }
